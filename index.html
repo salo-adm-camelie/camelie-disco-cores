@@ -91,5 +91,41 @@ react/cjs/react-jsx-runtime.production.min.js:
 */
 
   </script>
+  <script>
+
+(function() {
+  if (window.self === window.top) return; // Only run inside an iframe
+
+  function reportHeight() {
+    // Measure the tallest of all relevant boxes to avoid underreporting
+    var h = Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+      document.documentElement.offsetHeight,
+      document.body ? document.body.offsetHeight : 0
+    );
+    try {
+      window.parent.postMessage({ type: "camelie-iframe-height", height: h }, "*");
+    } catch (e) {}
+  }
+
+  // Initial + after load
+  window.addEventListener("load", function() {
+    reportHeight();
+    setTimeout(reportHeight, 100);
+    setTimeout(reportHeight, 500);
+  });
+
+  // Watch for any DOM-driven size changes (React re-renders)
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(reportHeight);
+    if (document.body) ro.observe(document.body);
+    else document.addEventListener("DOMContentLoaded", function() { ro.observe(document.body); });
+  }
+  // Also listen to window resize (font-size, viewport rotation, etc.)
+  window.addEventListener("resize", reportHeight);
+})();
+
+  </script>
 </body>
 </html>
